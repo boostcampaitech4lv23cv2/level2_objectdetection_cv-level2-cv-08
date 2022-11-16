@@ -1,5 +1,7 @@
 from tqdm import tqdm
 import os
+import argparse
+from datetime import datetime
 
 import torch
 import torchvision
@@ -9,6 +11,7 @@ from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from Modules import *
 
 def train_fn(num_epochs, train_data_loader, optimizer, model, device):
+    check_point_hash = datetime.now().microsecond % 1000
     best_loss = 1000
     loss_hist = Averager()
     for epoch in range(num_epochs):
@@ -35,7 +38,7 @@ def train_fn(num_epochs, train_data_loader, optimizer, model, device):
 
         print(f"Epoch #{epoch+1} loss: {loss_hist.value}")
         if loss_hist.value < best_loss:
-            save_path = './checkpoints/faster_rcnn_torchvision_checkpoints.pth'
+            save_path = f'./checkpoints/faster_rcnn_torchvision_checkpoints_{check_point_hash}.pth'
             save_dir = os.path.dirname(save_path)
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
@@ -44,17 +47,30 @@ def train_fn(num_epochs, train_data_loader, optimizer, model, device):
             best_loss = loss_hist.value
             
 if __name__ == '__main__':
-    annotation = '../../dataset/train.json' # annotation 경로
-    data_dir = '../../dataset' # data_dir 경로
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--seed', type=int, default=42)
+    parser.add_argument('--epochs', type=int, default=20)
+    parser.add_argument('--batch_size', type=int, default=16)
+    parser.add_argument('--lr', type=int, default=0.005)
+    parser.add_argument('--weight_decay', type=int, default=0.0005)
+    parser.add_argument('--annotation', type=str, default='../../dataset/train.json')
+    parser.add_argument('--data_dir', type=str, default='../../dataset')
+    parser.add_argument('--device', type=str, default='cuda')
+    parser.add_argument('--num_classes', type=int, default=11)
+
+    args = parser.parse_args()
+    
+    annotation = args.annotation # annotation 경로
+    data_dir = args.dataset # data_dir 경로
     train_dataset = CustomDataset(annotation, data_dir, get_train_transform()) 
     train_data_loader = DataLoader(
         train_dataset,
-        batch_size= 16,
+        batch_size= args.batch_size,
         shuffle=False,
         num_workers=4,
         collate_fn=collate_fn
     )
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    device = args.device
     print(device)
     
     # torchvision model 불러오기
@@ -66,8 +82,8 @@ if __name__ == '__main__':
     model.to(device)
     params = [p for p in model.parameters() if p.requires_grad]
     
-    optimizer = torch.optim.SGD(params, lr=0.005, momentum=0.9, weight_decay=0.0005)
-    num_epochs = 20
+    optimizer = torch.optim.SGD(params, lr=args.lr, momentum=0.9, weight_decay=args.weight_decay)
+    num_epochs = args.epochs
     
     # training
     train_fn(num_epochs, train_data_loader, optimizer, model, device)
