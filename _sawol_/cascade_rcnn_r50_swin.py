@@ -1,10 +1,10 @@
 _base_ = [
     './_base_/datasets/coco_detection.py',
-    './_base_/models/cascade_swin_CIou.py',
+    './_base_/models/cascade_swin_base.py',
     './_base_/schedules/schedule_1x.py',
     './_base_/default_runtime.py'
 ]
-pretrained = 'https://github.com/SwinTransformer/storage/releases/download/v2.11.0/swin_tiny_patch4_window7_224.pth'  # noqa
+pretrained = 'https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_tiny_patch4_window7_224.pth'  # noqa
 model = dict(
     backbone=dict(
         _delete_=True,
@@ -38,5 +38,14 @@ optimizer = dict(
             'relative_position_bias_table': dict(decay_mult=0.),
             'norm': dict(decay_mult=0.)
         }))
-lr_config = dict(warmup_iters=1000, step=[8, 11])
+
+lr_config = dict(
+    policy='CosineAnnealing',
+    warmup='linear',
+    warmup_iters=1000,
+    warmup_ratio=0.01,
+    min_lr_ratio=1e-05,
+    by_epoch=False)
+
 runner = dict(max_epochs=30)
+seed = 8

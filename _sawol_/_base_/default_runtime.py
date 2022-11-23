@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=1)
+checkpoint_config = dict(interval=50)
 # yapf:disable
 log_config = dict(
     interval=50,
@@ -6,7 +6,7 @@ log_config = dict(
         dict(type='TextLoggerHook'),
         dict(type='WandbLoggerHook', 
             init_kwargs={
-                'project': 'best dataset',
+                'project': 'mmdet',
                 'entity': '8bit',
                 },
             interval=50
