@@ -24,7 +24,10 @@ model = dict(
         with_cp=False,
         convert_weights=True,
         init_cfg=dict(type='Pretrained', checkpoint=pretrained)),
+    
     neck=dict(in_channels=[96, 192, 384, 768]))
+
+
 
 optimizer = dict(
     _delete_=True,
